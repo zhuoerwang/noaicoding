@@ -1,31 +1,36 @@
 # Project 12: Autograd Engine
 
-## Level 1: Value Class + Basic Operations
+## Level 1: Tensor Class + Basic Operations
 
-**Implement a scalar autograd engine (inspired by Karpathy's micrograd):**
+**Implement a scalar autograd engine:**
 
 ```
-class Value:
-    __init__(data: float, label: str = "")
+class Tensor:
+    __init__(data: float, _children: tuple = (), label: str = "")
     data: float
-    grad: float          # gradient, initialized to 0.0
-    __add__(other) -> Value
-    __mul__(other) -> Value
-    __neg__() -> Value
-    __sub__(other) -> Value
+    grad: float              # gradient, initialized to 0.0
+    _children: tuple         # parent tensors that produced this
+    _backward: Callable      # closure that computes local gradients (default: no-op)
+    __add__(other) -> Tensor
+    __mul__(other) -> Tensor
+    __neg__() -> Tensor
+    __sub__(other) -> Tensor
+    __radd__(other) -> Tensor
+    __rmul__(other) -> Tensor
 ```
 
 **Requirements:**
-- Every `Value` stores `data` (the number) and `grad` (the gradient)
-- Operations return new `Value` objects that track their parents (children)
-- Support `Value + Value`, `Value * Value`, `Value - Value`, `Value + float`, etc.
-- Each operation records a `_backward` function that computes local gradients
+- Single `Tensor` class — all operations return `Tensor` instances (no subclasses)
+- Each operation creates a new `Tensor` and attaches a `_backward` closure that knows the local gradient rule
+- The closure captures references to input tensors and multiplies by `out.grad` (chain rule)
+- Support `Tensor + Tensor`, `Tensor * Tensor`, `float + Tensor`, etc. via `__radd__`/`__rmul__`
+- Wrap raw floats into `Tensor` inside `__add__`/`__mul__` when needed
 - No gradient computation yet — just build the expression graph
 
 **Test Cases:**
 ```python
-a = Value(2.0)
-b = Value(3.0)
+a = Tensor(2.0)
+b = Tensor(3.0)
 c = a + b
 assert c.data == 5.0
 
@@ -37,48 +42,72 @@ assert e.data == 3.0
 
 f = -a
 assert f.data == -2.0
+
+g = a - b
+assert g.data == -1.0
+
+# float on left side
+h = 1.0 + a
+assert h.data == 3.0
 ```
 
 ---
 
 ## Level 2: Backpropagation
 
-**Add backward pass:**
+**Add backward pass and more operations to `Tensor`:**
 
 ```
-class Value:
-    backward() -> None   # compute gradients for all nodes in graph
-    __pow__(n) -> Value   # power operation
-    relu() -> Value       # ReLU activation
-    tanh() -> Value       # tanh activation
+class Tensor:
+    backward() -> None       # topological sort + reverse + call _backward
+    __pow__(n: float) -> Tensor
+    relu() -> Tensor
+    tanh() -> Tensor
 ```
 
 **Requirements:**
-- `backward()` computes gradients via reverse-mode autodiff (chain rule)
-- Topological sort the expression graph, then apply `_backward` in reverse order
-- The root node's gradient is set to 1.0 before backprop
+- `backward()` does: set root grad to 1.0 → topological sort → call `_backward()` in reverse order
+- Each operation (`__pow__`, `relu`, `tanh`) attaches its own `_backward` closure to the result
 - Handle nodes used in multiple expressions (gradients accumulate with `+=`)
-- Implement `__pow__`, `relu()`, and `tanh()` with correct local gradients
 
-**Gradient rules:**
+**Gradient rules (each implemented as a closure inside the operation):**
 ```
-Addition:  d/da (a + b) = 1.0,  d/db (a + b) = 1.0
-Multiply:  d/da (a * b) = b,    d/db (a * b) = a
-Power:     d/da (a ** n) = n * a^(n-1)
-ReLU:      d/da relu(a) = 1.0 if a > 0 else 0.0
-tanh:      d/da tanh(a) = 1 - tanh(a)^2
+__add__:   self.grad += out.grad;          other.grad += out.grad
+__mul__:   self.grad += other.data * out.grad;  other.grad += self.data * out.grad
+__pow__:   self.grad += n * self.data^(n-1) * out.grad
+relu():    self.grad += (1.0 if self.data > 0 else 0.0) * out.grad
+tanh():    self.grad += (1 - out.data^2) * out.grad
 ```
 
 **Test Cases:**
 ```python
-a = Value(2.0)
-b = Value(3.0)
+a = Tensor(2.0)
+b = Tensor(3.0)
 c = a * b       # 6.0
 d = c + a       # 8.0 (a is used twice!)
 d.backward()
 
 assert a.grad == 4.0   # d/da = b + 1 = 3 + 1 = 4 (chain rule, a used twice)
 assert b.grad == 2.0   # d/db = a = 2
+
+# Power
+a = Tensor(3.0)
+b = a ** 2       # 9.0
+b.backward()
+assert a.grad == 6.0   # 2 * 3 = 6
+
+# ReLU
+a = Tensor(-2.0)
+b = a.relu()
+assert b.data == 0.0
+b.backward()
+assert a.grad == 0.0
+
+# tanh
+a = Tensor(0.0)
+b = a.tanh()
+b.backward()
+assert a.grad == 1.0   # 1 - tanh(0)^2 = 1
 
 # Verify against PyTorch (if available)
 ```
@@ -87,38 +116,40 @@ assert b.grad == 2.0   # d/db = a = 2
 
 ## Level 3: Neuron + MLP
 
-**Build a neural network from Value objects:**
+**Build a neural network from Tensor objects:**
 
 ```
 class Neuron:
     __init__(n_inputs: int, activation: str = "relu")
-    __call__(x: list[Value]) -> Value
+    __call__(x: list[Tensor]) -> Tensor
+    parameters() -> list[Tensor]
 
 class Layer:
     __init__(n_inputs: int, n_outputs: int, activation: str = "relu")
-    __call__(x: list[Value]) -> list[Value]
+    __call__(x: list[Tensor]) -> list[Tensor]
+    parameters() -> list[Tensor]
 
 class MLP:
     __init__(n_inputs: int, layer_sizes: list[int])
-    __call__(x: list[Value]) -> list[Value]
-    parameters() -> list[Value]
+    __call__(x: list[Tensor]) -> list[Tensor]
+    parameters() -> list[Tensor]
 ```
 
 **Requirements:**
-- `Neuron`: stores weights + bias as `Value` objects, computes `activation(sum(w*x) + b)`
+- `Neuron`: stores weights + bias as `Tensor` objects, computes `activation(sum(w*x) + b)`
 - `Layer`: list of neurons, applies each to the same input
 - `MLP`: chain of layers, output of one feeds into next
 - Last layer has no activation (linear output)
-- `parameters()` returns flat list of all `Value` weights and biases
+- `parameters()` returns flat list of all `Tensor` weights and biases
 - Initialize weights randomly (small values, e.g., uniform(-1, 1))
 
 **Test Cases:**
 ```python
 model = MLP(3, [4, 4, 1])  # 3 inputs, two hidden layers of 4, 1 output
-x = [Value(1.0), Value(2.0), Value(3.0)]
+x = [Tensor(1.0), Tensor(2.0), Tensor(3.0)]
 out = model(x)
 assert len(out) == 1
-assert isinstance(out[0], Value)
+assert isinstance(out[0], Tensor)
 
 params = model.parameters()
 assert len(params) == (3*4 + 4) + (4*4 + 4) + (4*1 + 1)  # weights + biases
@@ -132,7 +163,7 @@ assert len(params) == (3*4 + 4) + (4*4 + 4) + (4*1 + 1)  # weights + biases
 
 ```
 class SGD:
-    __init__(parameters: list[Value], lr: float = 0.01)
+    __init__(parameters: list[Tensor], lr: float = 0.01)
     step() -> None       # update parameters: p.data -= lr * p.grad
     zero_grad() -> None  # reset all gradients to 0
 ```
@@ -158,8 +189,8 @@ initial_loss = None
 final_loss = None
 for step in range(100):
     # forward
-    preds = [model([Value(x[0]), Value(x[1])])[0] for x in xs]
-    loss = sum((p - Value(y)) ** 2 for p, y in zip(preds, ys))
+    preds = [model([Tensor(x[0]), Tensor(x[1])])[0] for x in xs]
+    loss = sum((p - Tensor(y)) ** 2 for p, y in zip(preds, ys))
 
     if step == 0:
         initial_loss = loss.data
