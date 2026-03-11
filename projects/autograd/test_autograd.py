@@ -317,6 +317,8 @@ class TestLevel4:
         assert p.grad == 0.0
 
     def test_loss_decreases(self):
+        import random
+        random.seed(42)
         xs = [[2.0, 3.0], [-1.0, -2.0], [1.0, -1.0], [-2.0, 1.0]]
         ys = [1.0, -1.0, 1.0, -1.0]
 

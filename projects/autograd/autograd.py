@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+import random
 
 class Tensor:
 
@@ -34,14 +35,12 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __pow__(self, other) -> Tensor:
-        if isinstance(other, (int, float)):
-            other = Tensor(other)
+    def __pow__(self, n) -> Tensor:
+        assert isinstance(n, (int, float)), "exponent must be a number"
+        out = Tensor(self.data ** n, _children=(self,), label="pow")
 
-        out = Tensor(self.data ** other.data, _children=(self, other), label="pow")
-        
         def _backward():
-            self.grad += other.data * self.data ** (other.data - 1) * out.grad
+            self.grad += n * self.data ** (n - 1) * out.grad
         
         out._backward = _backward
         return out
@@ -98,17 +97,71 @@ class Tensor:
 
 
 class Neuron:
-    pass
+    def __init__(self, n_inputs: int, activation: str = "relu"):
+        self.activation = activation
+        self.w = [Tensor(random.uniform(-1, 1)) for i in range(n_inputs)]
+        self.b = Tensor(0.0)
+
+    def __call__(self, x: list[Tensor]) -> Tensor:
+        act = sum([wi * xi for wi, xi in zip(self.w, x)], self.b)
+        return act.relu() if self.activation == "relu" else act
+    
+    def __repr__(self):
+        return f"{'ReLU' if self.activation == "relu" else 'Linear'}Neuron({len(self.w)})"
+    
+    def parameters(self) -> list[Tensor]:
+        return self.w + [self.b]
+
+class Module:
+
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = 0
+
+    def parameters(self):
+        return []
+
+class Layer(Module):
+    def __init__(self, n_inputs: int, n_outputs: int, **kwargs):
+        self.neurons = [Neuron(n_inputs, **kwargs) for _ in range(n_outputs)]
+
+    def __call__(self, x: list[Tensor]) -> list[Tensor]:
+        out = [n(x) for n in self.neurons]
+        return out
+
+    def __repr__(self):
+        return f"Layer of [{', '.join(str(n) for n in self.neurons)}]"
+    
+    def parameters(self) -> list[Tensor]:
+        return [p for n in self.neurons for p in n.parameters()]
 
 
-class Layer:
-    pass
+class MLP(Module):
+    def __init__(self, n_inputs: int, layer_sizes: list[int]):
+        ls = [n_inputs] + layer_sizes
+        self.layers = [Layer(ls[i], ls[i+1], activation='relu' if i<len(layer_sizes)-1 else None) for i in range(len(layer_sizes))]
+
+    def __call__(self, x: list[Tensor]) -> list[Tensor]:
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+    def __repr__(self):
+        return f"MLP of [{', '.join(str(layer) for layer in self.layers)}]"
+
+    def parameters(self) -> list[Tensor]:
+        return [p for layer in self.layers for p in layer.parameters()]
 
 
-class MLP:
-    pass
-
-
-class SGD:
-    pass
-
+class SGD(Module):
+    def __init__(self, parameters: list[Tensor], lr: float=0.01):
+        self.lr = lr
+        self.parameters = parameters
+    
+    def step(self) -> None:
+        for i in range(len(self.parameters)):
+            self.parameters[i].data += -self.lr * self.parameters[i].grad
+    
+    def zero_grad(self) -> None:
+        for i in range(len(self.parameters)):
+            self.parameters[i].grad = 0.0
