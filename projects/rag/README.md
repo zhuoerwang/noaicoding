@@ -153,3 +153,13 @@ prompt = rag.query("Who created Python?")
 assert "Guido van Rossum" in prompt
 assert "Q: Who created Python?" in prompt
 ```
+
+---
+
+## Advanced RAG Topics (L5-L8)
+
+> **These topics are covered through two other paths:**
+> - **Theory**: [DeepLearning.ai RAG course](https://learn.deeplearning.ai/courses/retrieval-augmented-generation/)
+> - **Practice**: trialmatch project (`/Users/joelwang/Projects/trial/`) — Phases 3-5 implement hybrid search, criterion-level matching with evidence linking, exhaustive retrieval across 400K+ trials, and scoring evaluation
+>
+> Topics covered there: hybrid search (BM25 + vector + RRF), citation/grounding, exhaustive retrieval (map-reduce), RAG evaluation metrics

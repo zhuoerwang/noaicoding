@@ -1,6 +1,6 @@
 # noaicoding.com — Build Software From Scratch
 
-> 30 projects. From hash maps to coding agents. All from scratch.
+> 42 projects. From hash maps to coding agents to system design. All from scratch.
 
 ## Curriculum (ordered by difficulty + dependencies)
 
@@ -100,6 +100,24 @@
 |---|---------|---|---|
 | 30 | Bitcoin | SHA-256, ECDSA, transactions, Merkle tree, proof of work, blockchain | Hard |
 
+### Phase 12: CodeSignal ICF-Style System Design
+*Multi-level OOP system design — the format used in real hiring assessments (Uber, Dropbox, Roblox, Capital One).*
+
+| # | Project | Key concepts | Difficulty |
+|---|---------|---|---|
+| 31 | Parking Lot | Vehicle types, spot fitting, fee calculation, reservations, peak pricing | Medium |
+| 32 | Hotel Booking | Room types, date overlap, seasonal pricing, loyalty, overbooking, waitlist | Medium |
+| 33 | Flight Reservation | Seat classes, fares, baggage, upgrades, multi-leg PNR, atomic booking | Medium |
+| 34 | Employee Time Tracker | Check-in/out, overtime rules (daily/weekly), departments, payroll reports | Medium |
+| 35 | Library Management | Multiple copies, waitlist, fines, recommendations, bulk operations | Medium |
+| 36 | Connect Four | Variable grid, win detection (4 directions), score tracking, undo/redo | Easy-Medium |
+| 37 | Blackjack | Card/deck/hand, ace logic, dealer AI, betting, multi-round stats | Medium |
+| 38 | Bank | Accounts, tellers, transactions, branches, cash management, settlement | Medium |
+| 39 | Movie Recommendation | Ratings, collaborative filtering, similarity scores, genre-based recs | Medium |
+| 40 | Elevator | Directional priority, FIFO service, multi-elevator dispatch, state management | Medium |
+| 41 | Chess | Piece movement, path blocking, turn enforcement, check/checkmate/stalemate | Medium-Hard |
+| 42 | Flight Search | Route search, filters/sorting, multi-leg connections, recurring schedules | Medium |
+
 ---
 
 ## Dependency Graph
@@ -158,6 +176,7 @@ Autograd ────────↗            ↘
 | Conversation, streaming generation | #28 AI Chatbot |
 | Agent loop, tool dispatch, planning | #29 Coding Agent |
 | Cryptography, blockchain, PoW | #30 Bitcoin |
+| OOP design, extensibility, multi-level progression | #31–35 ICF System Design |
 
 ---
 
@@ -195,6 +214,18 @@ Autograd ────────↗            ↘
 | 28 | AI Chatbot | `chatbot/` | `test_chatbot.py` | New |
 | 29 | Coding Agent | `agent/` | `test_agent.py` | New |
 | 30 | Bitcoin | `bitcoin/` | `test_bitcoin.py` | New |
+| 31 | Parking Lot | `parking_lot/` | `test_parking_lot.py` | New |
+| 32 | Hotel Booking | `hotel_booking/` | `test_hotel_booking.py` | New |
+| 33 | Flight Reservation | `flight_reservation/` | `test_flight_reservation.py` | New |
+| 34 | Employee Time Tracker | `time_tracker/` | `test_time_tracker.py` | New |
+| 35 | Library Management | `library/` | `test_library.py` | New |
+| 36 | Connect Four | `connect_four/` | `test_connect_four.py` | New |
+| 37 | Blackjack | `blackjack/` | `test_blackjack.py` | New |
+| 38 | Bank | `bank/` | `test_bank.py` | New |
+| 39 | Movie Recommendation | `movie_recommendation/` | `test_movie_recommendation.py` | New |
+| 40 | Elevator | `elevator/` | `test_elevator.py` | New |
+| 41 | Chess | `chess/` | `test_chess.py` | New |
+| 42 | Flight Search | `flight_search/` | `test_flight_search.py` | New |
 
 ---
 
@@ -230,6 +261,18 @@ Autograd ────────↗            ↘
 - [ ] #28 AI Chatbot
 - [ ] #29 Coding Agent
 - [ ] #30 Bitcoin
+- [ ] #31 Parking Lot
+- [ ] #32 Hotel Booking
+- [ ] #33 Flight Reservation
+- [ ] #34 Employee Time Tracker
+- [ ] #35 Library Management
+- [ ] #36 Connect Four
+- [ ] #37 Blackjack
+- [ ] #38 Bank
+- [ ] #39 Movie Recommendation
+- [ ] #40 Elevator
+- [ ] #41 Chess
+- [ ] #42 Flight Search
 
 ---
 
