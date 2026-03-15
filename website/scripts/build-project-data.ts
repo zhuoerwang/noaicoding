@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { join, resolve } from 'path';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
-const PROJECTS_DIR = join(ROOT, 'projects');
+const PROJECTS_DIR = join(ROOT, 'fundamentals');
 const OUT_INDEX = join(ROOT, 'website', 'src', 'data', 'project-index.json');
 const OUT_PUBLIC = join(ROOT, 'website', 'public', 'projects');
 
